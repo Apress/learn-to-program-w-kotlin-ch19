@@ -1,0 +1,302 @@
+Section 19.2
+class DigitFinder(val input : Picture) {
+    val blackWhitRedThresholder: ((Color) -> (Color)) = {
+        if (it.red > 196 && it.green > 196 && it.blue > 196) {
+            Color.WHITE
+        } else if (it.red > 196) {
+            Color.RED
+        } else {
+            Color.BLACK
+        }
+    }
+
+    fun digits() : List<Picture> {
+        val result = mutableListOf<Picture>()
+        val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+        result.add(blackWhitRedVersion)
+        return result
+    }
+}
+
+
+'Second attempt':
+val blackWhitRedThresholder: ((Color) -> (Color)) = {
+    if (it.red > 128 && it.green > 128 && it.blue > 128) {
+        Color.WHITE
+    } else if (it.red > 128) {
+        Color.RED
+    } else {
+        Color.BLACK
+    }
+}
+
+
+'Third attempt', just before Section 19.3:
+val blackWhitRedThresholder: ((Color) -> (Color)) = {
+    if (it.red < 96 && it.green < 96 && it.blue < 96) {
+        Color.BLACK
+    } else if (it.red > 128 && it.green < 96 && it.blue < 96) {
+        Color.RED
+    } else {
+        Color.WHITE
+    }
+}
+
+
+Start of section 19.3:
+fun digits(): List<Picture> {
+    val result = mutableListOf<Picture>()
+    val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+
+    val slicesH = blackWhitRedVersion.
+            sliceHorizontallyIntoPicturesContainingRed()
+    val sliceH0 = slicesH.first()
+
+    result.add(sliceH0)
+    return result
+}
+
+Just before Section 19.4:
+fun digits(): List<Picture> {
+    val result = mutableListOf<Picture>()
+    val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+
+    val slicesH = blackWhitRedVersion.
+            sliceHorizontallyIntoPicturesContainingRed()
+    val sliceH0 = slicesH.first()
+
+    val slicesV = sliceH0.
+            sliceVerticallyIntoPicturesContainingRed()
+    val sliceV0 = slicesV.first()
+
+    result.add(sliceV0)
+    return result
+}
+
+
+Section 19.4:
+fun rowContainsPixelMatching(row: Int, toMatch: Color): Boolean {
+    for (column in 0..width() - 1) {
+        if (pixelByRowColumn(row, column) == toMatch) {
+            return true
+        }
+    }
+    return false
+}
+
+
+@Test
+fun rowContainsPixelMatchingTest() {
+    val allBlue = load("blue10.png")
+    for (row in 0..9) {
+        Assert.assertTrue(allBlue.rowContainsPixelMatching(row, Color.BLUE))
+        Assert.assertFalse(allBlue.rowContainsPixelMatching(row, Color.RED))
+    }
+    val allRed = load("red10.png")
+    for (row in 0..9) {
+        Assert.assertTrue(allRed.rowContainsPixelMatching(row, Color.RED))
+        Assert.assertFalse(allRed.rowContainsPixelMatching(row, Color.BLUE))
+    }
+
+    val someRed = load("red_in_black.png")
+    for (row in 0..49) {
+        Assert.assertFalse(someRed.rowContainsPixelMatching(row, Color.RED))
+    }
+    for (row in 50..99) {
+        Assert.assertTrue(someRed.rowContainsPixelMatching(row, Color.RED))
+    }
+}
+
+
+Just after Project Step 19.1:
+@Test
+fun sliceHorizontallyIntoPicturesContainingTest() {
+    val picture = load("slice_test_h.png")
+    val slices = picture.sliceHorizontallyIntoPicturesContaining(Color.RED)
+    Assert.assertEquals(3, slices.size)
+    checkPicture(load("h0.png"), slices[0])
+    checkPicture(load("h1.png"), slices[1])
+    checkPicture(load("h2.png"), slices[2])
+
+    val slicesBlack = picture.sliceHorizontallyIntoPicturesContaining(Color.BLACK)
+    Assert.assertEquals(1, slicesBlack.size)
+    checkPicture(load("slice_test_h.png"), slicesBlack[0])
+}
+
+
+Section 19.5:
+fun digits(): List<Picture> {
+    val result = mutableListOf<Picture>()
+    val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+
+    val slicesH = blackWhitRedVersion.sliceHorizontallyIntoPicturesContaining(Color.RED)
+    val signSlice = slicesH.first()
+
+    val slicesV = signSlice.sliceVerticallyIntoPicturesContaining(Color.RED)
+    val sign = slicesV.first()
+
+    val slices2H = sign.sliceHorizontallyIntoPicturesContaining(Color.BLACK)
+    val digitsSlice = slices2H.first()
+    
+    result.add(digitsSlice)
+    return result
+}
+
+Just before Project Step 19.3:
+val sizeAtLeast20: ((Picture) -> (Boolean)) = {
+    it.width() > 20 && it.height() > 20
+}
+
+
+Project Step 19.3:
+val slices2H = sign.
+        sliceHorizontallyIntoPicturesContaining(Color.BLACK).
+        filter(sizeAtLeast20)
+val digitsSlice = slices2H.first()
+
+After Project Step 19.3:
+class DigitFinder(val input: Picture) {
+    val blackWhitRedThresholder: ((Color) -> (Color)) = {
+        if (it.red < 96 && it.green < 96 && it.blue < 96) {
+            Color.BLACK
+        } else if (it.red > 128 && it.green < 96 && it.blue < 96) {
+            Color.RED
+        } else {
+            Color.WHITE
+        }
+    }
+
+    val sizeAtLeast20: ((Picture) -> (Boolean)) = {
+        it.width() > 20 && it.height() > 20
+    }
+
+    val sizeAtLeast10: ((Picture) -> (Boolean)) = {
+        it.width() > 10 && it.height() > 10
+    }
+
+    fun digits(): List<Picture> {
+        val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+
+        val slicesH = blackWhitRedVersion.
+                sliceHorizontallyIntoPicturesContaining(Color.RED)
+        val signSlice = slicesH.first()
+
+        val slicesV = signSlice.
+                sliceVerticallyIntoPicturesContaining(Color.RED)
+        val sign = slicesV.first()
+
+        val slices2H = sign.
+                sliceHorizontallyIntoPicturesContaining(Color.BLACK).
+                filter(sizeAtLeast20)
+        val digitsSlice = slices2H.first()
+
+        return digitsSlice.
+                sliceVerticallyIntoPicturesContaining(Color.BLACK).
+                filter(sizeAtLeast10)
+    }
+}
+
+Just before Section 19.6:
+@Test
+fun analyse() {
+    val s80 = loadSign("80.png")
+    val digitPictures = s80.digits()
+    saveInTempDir(digitPictures[0], "p0.png")
+    saveInTempDir(digitPictures[1], "p1.png")
+}
+
+---- Solutions to Project Steps ----
+Project Step 19.1:
+fun columnContainsPixelMatching(column: Int, toMatch: Color): Boolean {
+    for (row in 0..height() - 1) {
+        if (pixelByRowColumn(row, column) == toMatch) {
+            return true
+        }
+    }
+    return false
+}
+
+
+@Test
+fun columnContainsPixelMatchingTest() {
+    val allBlue = load("blue10.png")
+    for (column in 0..9) {
+        Assert.assertFalse(allBlue.columnContainsPixelMatching(column, Color.RED))
+        Assert.assertTrue(allBlue.columnContainsPixelMatching(column, Color.BLUE))
+    }
+    val allRed = load("red10.png")
+    for (column in 0..9) {
+        Assert.assertTrue(allRed.columnContainsPixelMatching(column, Color.RED))
+        Assert.assertFalse(allRed.columnContainsPixelMatching(column, Color.BLUE))
+    }
+
+    //100 rows, 200 columns, all black apart from
+    //a 50-by-50 square with top left corner at
+    //row 50 and column 100.
+    val someRed = load("red_in_black.png")
+    for (column in 0..99) {
+        Assert.assertFalse(someRed.columnContainsPixelMatching(column, Color.RED))
+    }
+    for (column in 100..149) {
+        Assert.assertTrue(someRed.columnContainsPixelMatching(column, Color.RED))
+    }
+    for (column in 150..199) {
+        Assert.assertFalse(someRed.columnContainsPixelMatching(column, Color.RED))
+    }
+}
+
+
+Project Step 19.2:
+@Test
+fun sliceVerticallyIntoPicturesContainingTest() {
+    val picture = load("slice_test_v.png")
+    val slices = picture.sliceVerticallyIntoPicturesContaining(Color.RED)
+    Assert.assertEquals(3, slices.size)
+    checkPicture(load("v0.png"), slices[0])
+    checkPicture(load("v1.png"), slices[1])
+
+    val slicesBlack = picture.sliceVerticallyIntoPicturesContaining(Color.BLACK)
+    Assert.assertEquals(1, slicesBlack.size)
+    checkPicture(load("slice_test_v.png"), slicesBlack[0])
+}
+
+
+
+Project Step 19.3:
+package pfb.imaging
+
+import java.awt.Color
+
+class DigitFinder(val input: Picture) {
+    val blackWhitRedThresholder: ((Color) -> (Color)) = {
+        if (it.red < 96 && it.green < 96 && it.blue < 96) {
+            Color.BLACK
+        } else if (it.red > 128 && it.green < 96 && it.blue < 96) {
+            Color.RED
+        } else {
+            Color.WHITE
+        }
+    }
+
+    val sizeAtLeast20: ((Picture) -> (Boolean)) = {
+        it.width() > 20 && it.height() > 20
+    }
+
+    fun digits(): List<Picture> {
+        val blackWhitRedVersion = input.transform(blackWhitRedThresholder)
+
+        val slicesH = blackWhitRedVersion.
+                sliceHorizontallyIntoPicturesContaining(Color.RED)
+        val signSlice = slicesH.first()
+
+        val slicesV = signSlice.
+                sliceVerticallyIntoPicturesContaining(Color.RED)
+        val sign = slicesV.first()
+
+        val slices2H = sign.
+                sliceHorizontallyIntoPicturesContaining(Color.BLACK).
+                filter(sizeAtLeast20)
+
+        return slices2H
+    }
+}
